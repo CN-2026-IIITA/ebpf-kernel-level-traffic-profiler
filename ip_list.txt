@@ -1,0 +1,14 @@
+# Private IPv4 ranges (used during local testing)
+10.0.0.0/8
+192.168.1.0/24
+
+# loopback for internal checks
+127.0.0.1
+
+# IPv6 documentation range (used for testing parsing)
+2001:db8::/32
+
+# added one full IPv6 address to verify handling
+2001:db8:abcd:1234:5678:9abc:def0:10
+
+# note: can extend this list later if more cases are needed
