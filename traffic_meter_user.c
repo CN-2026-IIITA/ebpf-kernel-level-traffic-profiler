@@ -70,6 +70,8 @@ static int file_init(void *config)
 static int file_write(const struct traffic_record *rec)
 {
     char filename[256];
+
+    // log file per user (uid) and interface
     snprintf(filename, sizeof(filename), "/tmp/traffic_user_%s_%u.log",
              g_nic_id, rec->uid);
 
@@ -132,7 +134,10 @@ static void sig_handler(int sig)
 static void ip_to_str(__u32 ip, char *buf, size_t buflen)
 {
     struct in_addr a = { .s_addr = ip };
-    inet_ntop(AF_INET, &a, buf, buflen);
+
+    if (!inet_ntop(AF_INET, &a, buf, buflen)) {
+        strncpy(buf, "invalid", buflen);
+    }
 }
 
 static int handle_event(void *ctx, void *data, size_t data_sz)
@@ -146,6 +151,7 @@ static int handle_event(void *ctx, void *data, size_t data_sz)
     if (!stats)
         return 0;
 
+    // update stats based on traffic direction
     if (e->direction)
         stats->total_out += e->bytes;
     else
@@ -179,6 +185,7 @@ static int handle_event_v6(void *ctx, void *data, size_t data_sz)
     if (!stats)
         return 0;
 
+    // update stats based on traffic direction
     if (e->direction)
         stats->total_out += e->bytes;
     else
@@ -205,8 +212,8 @@ int main(int argc, char **argv)
 {
     g_nic_id = (argc > 2) ? argv[2] : "unknown";
 
-    struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
-    if (setrlimit(RLIMIT_MEMLOCK, &r)) {
+    struct rlimit rlim = {RLIM_INFINITY, RLIM_INFINITY};
+    if (setrlimit(RLIMIT_MEMLOCK, &rlim)) {
         perror("setrlimit(RLIMIT_MEMLOCK)");
         return 1;
     }
@@ -252,137 +259,39 @@ int main(int argc, char **argv)
 
     struct bpf_program *prog_egress = bpf_object__find_program_by_name(
         obj, "traffic_meter_egress");
-    if (!prog_egress) {
-        fprintf(stderr, "Failed to find IPv4 egress program in BPF object\n");
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
     int prog_egress_fd = bpf_program__fd(prog_egress);
-    if (bpf_prog_attach(prog_egress_fd, cgroup_fd,
-                        BPF_CGROUP_INET_EGRESS, BPF_F_ALLOW_MULTI) < 0) {
-        perror("bpf_prog_attach(IPv4 egress)");
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
 
     struct bpf_program *prog_ingress = bpf_object__find_program_by_name(
         obj, "traffic_meter_ingress");
-    if (!prog_ingress) {
-        fprintf(stderr, "Failed to find IPv4 ingress program in BPF object\n");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
     int prog_ingress_fd = bpf_program__fd(prog_ingress);
-    if (bpf_prog_attach(prog_ingress_fd, cgroup_fd,
-                        BPF_CGROUP_INET_INGRESS, BPF_F_ALLOW_MULTI) < 0) {
-        perror("bpf_prog_attach(IPv4 ingress)");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
 
     struct bpf_program *prog_egress_v6 = bpf_object__find_program_by_name(
         obj, "traffic_meter_egress_v6");
-    if (!prog_egress_v6) {
-        fprintf(stderr, "Failed to find IPv6 egress program in BPF object\n");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
     int prog_egress_v6_fd = bpf_program__fd(prog_egress_v6);
-    if (bpf_prog_attach(prog_egress_v6_fd, cgroup_fd,
-                        BPF_CGROUP_INET_EGRESS, BPF_F_ALLOW_MULTI) < 0) {
-        perror("bpf_prog_attach(IPv6 egress)");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
 
     struct bpf_program *prog_ingress_v6 = bpf_object__find_program_by_name(
         obj, "traffic_meter_ingress_v6");
-    if (!prog_ingress_v6) {
-        fprintf(stderr, "Failed to find IPv6 ingress program in BPF object\n");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_prog_detach2(prog_egress_v6_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
     int prog_ingress_v6_fd = bpf_program__fd(prog_ingress_v6);
-    if (bpf_prog_attach(prog_ingress_v6_fd, cgroup_fd,
-                        BPF_CGROUP_INET_INGRESS, BPF_F_ALLOW_MULTI) < 0) {
-        perror("bpf_prog_attach(IPv6 ingress)");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_prog_detach2(prog_egress_v6_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
 
     struct ring_buffer *rb = ring_buffer__new(
         bpf_object__find_map_fd_by_name(obj, "events"),
         handle_event,
         NULL,
         NULL);
-    if (!rb) {
-        fprintf(stderr, "Failed to create IPv4 ring buffer\n");
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_prog_detach2(prog_egress_v6_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_v6_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
 
-    if (ring_buffer__add(rb,
-                         bpf_object__find_map_fd_by_name(obj, "events_v6"),
-                         handle_event_v6,
-                         NULL) < 0) {
-        fprintf(stderr, "Failed to add IPv6 ring buffer\n");
-        ring_buffer__free(rb);
-        bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_prog_detach2(prog_egress_v6_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-        bpf_prog_detach2(prog_ingress_v6_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-        bpf_object__close(obj);
-        close(cgroup_fd);
-        g_backend->close();
-        return 1;
-    }
+    ring_buffer__add(rb,
+                     bpf_object__find_map_fd_by_name(obj, "events_v6"),
+                     handle_event_v6,
+                     NULL);
 
-    printf("eBPF traffic meter loaded (cgroup mode, IPv4+IPv6). Press Ctrl+C to exit.\n");
-    fflush(stdout);
+    printf("eBPF traffic meter loaded. Press Ctrl+C to exit.\n");
 
+    // polling ring buffer for events
     while (!exiting) {
         ring_buffer__poll(rb, 100);
     }
 
     ring_buffer__free(rb);
-    bpf_prog_detach2(prog_egress_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-    bpf_prog_detach2(prog_ingress_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
-    bpf_prog_detach2(prog_egress_v6_fd, cgroup_fd, BPF_CGROUP_INET_EGRESS);
-    bpf_prog_detach2(prog_ingress_v6_fd, cgroup_fd, BPF_CGROUP_INET_INGRESS);
     bpf_object__close(obj);
     close(cgroup_fd);
 
