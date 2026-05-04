@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import FileList from "./components/FileList";
+import UploadArea from "./components/UploadArea";
 
 const API_BASE = "http://localhost:3001";
 
@@ -95,6 +96,9 @@ export default function App() {
               </button>
             )}
           </div>
+
+          {/* Upload drop zone */}
+          <UploadArea onUploadComplete={fetchFiles} />
 
           {/* File list */}
           <FileList

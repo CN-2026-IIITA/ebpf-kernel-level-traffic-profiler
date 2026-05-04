@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -10,6 +11,23 @@ const LOG_DIR = path.resolve(__dirname, process.env.LOG_DIR || "/tmp");
 
 // Regex to extract NIC and UID from log filenames
 const LOG_FILE_PATTERN = /^traffic_user_(.+)_(\d+)\.log$/;
+
+// Multer storage — saves uploaded files directly to LOG_DIR with their original name
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, LOG_DIR),
+  filename: (_req, file, cb) => cb(null, file.originalname),
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (_req, file, cb) => {
+    if (!LOG_FILE_PATTERN.test(file.originalname)) {
+      return cb(new Error("Filename must match traffic_user_<nic>_<uid>.log"));
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB max
+});
 
 app.use(cors());
 app.use(express.json());
@@ -74,6 +92,42 @@ app.delete("/api/files/:filename", async (req, res) => {
     console.error("Error deleting file:", err.message);
     res.status(500).json({ error: "Failed to delete file", detail: err.message });
   }
+});
+
+/**
+ * POST /api/upload
+ * Accepts one or more log files via multipart/form-data.
+ * Files must be named traffic_user_<nic>_<uid>.log.
+ */
+app.post("/api/upload", (req, res) => {
+  upload.array("files", 20)(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No files provided" });
+    }
+
+    const results = await Promise.all(
+      req.files.map(async (f) => {
+        const match = f.originalname.match(LOG_FILE_PATTERN);
+        const stat = await fs.promises.stat(f.path);
+        return {
+          filename: f.originalname,
+          nic: match[1],
+          uid: match[2],
+          size: stat.size,
+          modified: stat.mtime.toISOString(),
+        };
+      })
+    );
+
+    console.log(`Uploaded ${results.length} file(s):`, results.map((r) => r.filename).join(", "));
+    res.json({ success: true, files: results });
+  });
 });
 
 app.listen(PORT, () => {
