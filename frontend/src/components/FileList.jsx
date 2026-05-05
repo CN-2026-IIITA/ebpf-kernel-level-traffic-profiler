@@ -7,6 +7,8 @@
  *   error    – string | null, error message to display
  *   onRetry  – function, called when user clicks retry
  *   onDelete – function(filename), called when user clicks delete
+ *   onSelect – function(file), called when user clicks a file card
+ *   selectedFilename – string | undefined, filename of the currently selected file
  */
 
 export default function FileList({ files, loading, error, onRetry, onDelete, onSelect, selectedFilename }) {
