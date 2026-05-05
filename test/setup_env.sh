@@ -1,8 +1,6 @@
 !/bin/bash
 
 # setup_env.sh - Automated dependency installer for the eBPF Traffic Meter
-# Supports Ubuntu/Debian and Fedora/RHEL
-
 set -e
 
 echo "🔍 Detecting OS..."
