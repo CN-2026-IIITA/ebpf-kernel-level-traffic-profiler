@@ -52,7 +52,7 @@ sudo dnf install clang libbpf-devel elfutils-libelf-devel zlib-devel nodejs npm
 
 ---
 
-## 🏃 Getting Started
+## 🏃 Setup
 
 ### 1. Build and Run the eBPF Collector
 First, compile the eBPF programs and the user-space loader:
@@ -117,7 +117,7 @@ PORT=3001
 ## 📜 License
 This project is licensed under the **GPL-2.0-or-later**. eBPF programs using kernel helpers like `bpf_get_socket_uid` must be GPL-compliant.
 
-## 🔗 References
+## 🔗 Attribution & References
 
   1. eBPF & Kernel Telemetry
    * ebpf.io (https://ebpf.io/): The definitive starting point for eBPF, explaining the architecture, safety, and the
