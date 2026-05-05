@@ -4,6 +4,7 @@ import TopBar from "./components/TopBar";
 import FileList from "./components/FileList";
 import FileDetails from "./components/FileDetails";
 import UploadArea from "./components/UploadArea";
+import GeoMap from "./components/GeoMap";
 
 const API_BASE = "http://localhost:3001";
 
@@ -284,47 +285,56 @@ function SectionView({ section, files, rows, totalFiles, uniqueNics, uniqueUids,
       .slice(0, 8);
 
     return (
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
-        <div className="rounded-xl border border-border bg-bg-card/70 p-5">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">
-            {section === "top-ips" ? "Top destination IPs" : "Geo map summary"}
-          </h3>
-          <div className="space-y-3">
-            {rankedIps.map((item) => (
-              <div key={item.ip} className="space-y-1.5">
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="font-medium text-text-primary truncate">{item.ip}</span>
-                  <span className="text-text-muted">{formatBytes(item.bytes)}</span>
+      <div className="space-y-6">
+        <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
+          <div className="rounded-xl border border-border bg-bg-card/70 p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Top destination IPs
+            </h3>
+            <div className="space-y-3">
+              {rankedIps.map((item) => (
+                <div key={item.ip} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="font-medium text-text-primary truncate">{item.ip}</span>
+                    <span className="text-text-muted">{formatBytes(item.bytes)}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-bg-primary overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-accent-teal to-accent-blue"
+                      style={{ width: `${Math.max(8, (item.bytes / (rankedIps[0]?.bytes || 1)) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-text-muted flex items-center gap-2">
+                    <span>{item.type}</span>
+                    <span>•</span>
+                    <span>{item.hits} packets</span>
+                  </div>
                 </div>
-                <div className="h-2 rounded-full bg-bg-primary overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-accent-teal to-accent-blue"
-                    style={{ width: `${Math.max(8, (item.bytes / (rankedIps[0]?.bytes || 1)) * 100)}%` }}
-                  />
-                </div>
-                <div className="text-xs text-text-muted flex items-center gap-2">
-                  <span>{item.type}</span>
-                  <span>•</span>
-                  <span>{item.hits} packets</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-bg-card/70 p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Overview stats</h3>
+            <div className="space-y-3">
+              <MetaRow label="Log files" value={String(totalFiles)} />
+              <MetaRow label="Interfaces" value={String(uniqueNics)} />
+              <MetaRow label="Users" value={String(uniqueUids)} />
+              <MetaRow label="Total size" value={formatBytes(totalSize)} />
+              <MetaRow label="Rows loaded" value={String(rows.length)} />
+            </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-bg-card/70 p-5">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">Overview stats</h3>
-          <div className="space-y-3">
-            <MetaRow label="Log files" value={String(totalFiles)} />
-            <MetaRow label="Interfaces" value={String(uniqueNics)} />
-            <MetaRow label="Users" value={String(uniqueUids)} />
-            <MetaRow label="Total size" value={formatBytes(totalSize)} />
-            <MetaRow label="Rows loaded" value={String(rows.length)} />
+        {section === "geo-map" && (
+          <div className="rounded-xl border border-border bg-bg-card/70 p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-text-primary">Interactive World Map</h3>
+              <p className="text-sm text-text-muted">Visualizing the geographical origin of remote traffic</p>
+            </div>
+            <GeoMap filename={files[0]?.filename} />
           </div>
-          <div className="mt-4 rounded-lg border border-dashed border-border px-4 py-5 text-sm text-text-muted">
-            A live Leaflet map can be plugged in here once GeoIP data is available.
-          </div>
-        </div>
+        )}
       </div>
     );
   }
