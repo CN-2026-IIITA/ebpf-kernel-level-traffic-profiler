@@ -11,4 +11,31 @@
 # added one full IPv6 address to verify handling
 2001:db8:abcd:1234:5678:9abc:def0:10
 
+# Loopback
+::1
+
+# Link-local addresses
+fe80::/10
+
+# Unique local addresses (private IPv6)
+fc00::/7
+
+# Another documentation subnet
+2001:db8:1234::/48
+
+# Very small prefix
+2001:db8::1/128
+
+# Large prefix
+2000::/3
+
+# Multicast IPv6
+ff00::/8
+
+# Mixed short notation
+2001:db8::abcd
+
+# Long fully expanded format
+2001:0db8:0000:0000:0000:0000:0000:0001
+
 # note: can extend this list later if more cases are needed
