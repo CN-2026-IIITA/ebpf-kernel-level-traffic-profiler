@@ -8,9 +8,14 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "chokidar": "^5.0.0",
     "cors": "^2.8.5",
+    "csv-parse": "^6.2.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "multer": "^2.1.1"
+    "ip": "^2.0.1",
+    "multer": "^2.1.1",
+    "node-cache": "^5.1.2",
+    "ws": "^8.20.0"
   }
 }

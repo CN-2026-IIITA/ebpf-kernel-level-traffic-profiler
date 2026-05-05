@@ -4,6 +4,7 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const { parse } = require("csv-parse/sync");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -66,6 +67,50 @@ app.get("/api/files", async (req, res) => {
   } catch (err) {
     console.error("Error reading log directory:", err.message);
     res.status(500).json({ error: "Failed to read log directory", detail: err.message });
+  }
+});
+
+/**
+ * GET /api/files/:filename/rows
+ * Returns parsed CSV rows for a specific log file.
+ */
+app.get("/api/files/:filename/rows", async (req, res) => {
+  const { filename } = req.params;
+  const limit = Math.max(1, Math.min(Number(req.query.limit) || 500, 5000));
+  const rowFields = ["direction", "bytes", "src_ip", "dst_ip", "timestamp", "total_in", "total_out"];
+
+  if (!LOG_FILE_PATTERN.test(filename)) {
+    return res.status(400).json({ error: "Invalid filename format" });
+  }
+
+  const filePath = path.join(LOG_DIR, filename);
+
+  try {
+    const match = filename.match(LOG_FILE_PATTERN);
+    const content = await fs.promises.readFile(filePath, "utf8");
+    const rows = parse(content, {
+      columns: rowFields,
+      skip_empty_lines: true,
+      trim: true,
+      from_line: 1,
+    })
+      .slice(-limit)
+      .map((row) => ({
+        ...row,
+        nic: match[1],
+        uid: match[2],
+        bytes: Number(row.bytes || 0),
+        total_in: Number(row.total_in || 0),
+        total_out: Number(row.total_out || 0),
+      }));
+
+    res.json({ filename, rows });
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      return res.status(404).json({ error: "File not found" });
+    }
+    console.error("Error reading log rows:", err.message);
+    res.status(500).json({ error: "Failed to read log rows", detail: err.message });
   }
 });
 

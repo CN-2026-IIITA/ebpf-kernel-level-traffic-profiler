@@ -1,9 +1,20 @@
-export default function TopBar() {
+const TITLES = {
+  overview: "Dashboard",
+  "per-user": "Per User",
+  "top-ips": "Top IPs",
+  "geo-map": "Geo Map",
+  "raw-log": "Raw Log",
+  config: "Config",
+};
+
+export default function TopBar({ activeSection = "overview" }) {
+  const title = TITLES[activeSection] || "Dashboard";
+
   return (
     <header className="h-16 bg-bg-secondary/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
       {/* Left – Page Title */}
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-semibold text-text-primary">Dashboard</h1>
+        <h1 className="text-lg font-semibold text-text-primary">{title}</h1>
         <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-accent-teal/15 text-accent-teal border border-accent-teal/20">
           Live
         </span>

@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 const NAV_ITEMS = [
   { id: "overview",  label: "Overview",  icon: "📊", active: true },
   { id: "per-user",  label: "Per User",  icon: "👤", active: false },
@@ -9,9 +7,10 @@ const NAV_ITEMS = [
   { id: "config",    label: "Config",    icon: "⚙️", active: false },
 ];
 
-export default function Sidebar() {
+import { useState } from "react";
+
+export default function Sidebar({ activeId, onNavigate }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeId, setActiveId] = useState("overview");
 
   return (
     <aside
@@ -42,7 +41,7 @@ export default function Sidebar() {
             <button
               key={item.id}
               id={`nav-${item.id}`}
-              onClick={() => setActiveId(item.id)}
+              onClick={() => onNavigate(item.id)}
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-lg
                 text-sm font-medium transition-all duration-200 cursor-pointer
