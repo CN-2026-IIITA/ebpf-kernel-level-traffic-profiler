@@ -56,7 +56,7 @@ sudo dnf install clang libbpf-devel elfutils-libelf-devel zlib-devel nodejs npm
 📊 Dashboard Sections
 
 Overview: Real-time summary of discovered log files, total data processed, and active users.
-![im1](01.jpeg
+![im1](01.jpeg)
 
 Per User: Detailed breakdown of network usage (ingress/egress) per Linux UID.
 ![im2](02.jpeg)
