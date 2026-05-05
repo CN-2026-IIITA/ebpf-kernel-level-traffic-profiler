@@ -130,6 +130,45 @@ app.get("/api/files/:filename/analysis", async (req, res) => {
 });
 
 /**
+ * GET /api/files/:filename/rows
+ * Returns raw log rows from a specific log file.
+ */
+app.get("/api/files/:filename/rows", async (req, res) => {
+  const { filename } = req.params;
+  const limit = parseInt(req.query.limit, 10) || 100;
+
+  if (!LOG_FILE_PATTERN.test(filename)) {
+    return res.status(400).json({ error: "Invalid filename format" });
+  }
+
+  const filePath = path.join(LOG_DIR, filename);
+  try {
+    const content = await fs.promises.readFile(filePath, "utf-8");
+    const lines = content.trim().split("\n");
+    
+    const rows = lines.slice(-limit).map((line) => {
+      const parts = line.split(",");
+      if (parts.length < 7) return null;
+      return {
+        direction: parts[0],
+        bytes: parseInt(parts[1], 10) || 0,
+        src_ip: parts[2],
+        dst_ip: parts[3],
+        timestamp: parts[4],
+        total_in: parts[5],
+        total_out: parts[6],
+        uid: filename.match(LOG_FILE_PATTERN)?.[2] || "0",
+      };
+    }).filter(Boolean);
+
+    res.json({ rows });
+  } catch (err) {
+    console.error("Rows error:", err.message);
+    res.status(500).json({ error: "Failed to read log rows" });
+  }
+});
+
+/**
  * GET /api/geo/:ip
  * Proxy to fetch geo-location data from freeipapi.com
  */

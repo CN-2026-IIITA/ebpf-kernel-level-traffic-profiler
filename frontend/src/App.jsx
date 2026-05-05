@@ -271,12 +271,32 @@ function SectionView({ section, files, rows, totalFiles, uniqueNics, uniqueUids,
 
   if (section === "top-ips" || section === "geo-map") {
     const ipStats = rows.reduce((acc, row) => {
-      const dst = row.dst_ip || "unknown";
-      const src = row.src_ip || "unknown";
-      acc[dst] = acc[dst] || { ip: dst, bytes: 0, hits: 0, type: dst.includes(":") ? "IPv6" : "IPv4" };
-      acc[dst].bytes += Number(row.bytes || 0);
-      acc[dst].hits += 1;
-      acc[src] = acc[src] || { ip: src, bytes: 0, hits: 0, type: src.includes(":") ? "IPv6" : "IPv4" };
+      // remoteIp is dst if outgoing, src if incoming
+      const isOut = row.direction === "out";
+      const remoteIp = isOut ? row.dst_ip : row.src_ip;
+      
+      if (!remoteIp || remoteIp === "unknown") return acc;
+
+      // Filter private/local IPs
+      if (
+        remoteIp.startsWith("192.168.") ||
+        remoteIp.startsWith("10.") ||
+        remoteIp.startsWith("127.") ||
+        remoteIp.startsWith("172.1") ||
+        remoteIp.startsWith("fe80:") ||
+        remoteIp === "::1"
+      ) {
+        return acc;
+      }
+
+      acc[remoteIp] = acc[remoteIp] || { 
+        ip: remoteIp, 
+        bytes: 0, 
+        hits: 0, 
+        type: remoteIp.includes(":") ? "IPv6" : "IPv4" 
+      };
+      acc[remoteIp].bytes += Number(row.bytes || 0);
+      acc[remoteIp].hits += 1;
       return acc;
     }, {});
 
@@ -289,7 +309,7 @@ function SectionView({ section, files, rows, totalFiles, uniqueNics, uniqueUids,
         <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
           <div className="rounded-xl border border-border bg-bg-card/70 p-5">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
-              Top destination IPs
+              Top Remote IPs
             </h3>
             <div className="space-y-3">
               {rankedIps.map((item) => (
