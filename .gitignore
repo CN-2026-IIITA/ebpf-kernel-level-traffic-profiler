@@ -6,3 +6,5 @@ traffic_meter_user
 ipmask_tool
 tmp*
 node_modules
+*.env
+.env.*
