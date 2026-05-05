@@ -9,7 +9,7 @@
  *   onDelete – function(filename), called when user clicks delete
  */
 
-export default function FileList({ files, loading, error, onRetry, onDelete }) {
+export default function FileList({ files, loading, error, onRetry, onDelete, onSelect, selectedFilename }) {
   /* ── Error state ── */
   if (error) {
     return (
@@ -69,7 +69,9 @@ export default function FileList({ files, loading, error, onRetry, onDelete }) {
           key={file.filename}
           file={file}
           index={i}
+          selected={file.filename === selectedFilename}
           onDelete={() => onDelete(file.filename)}
+          onSelect={() => onSelect?.(file)}
         />
       ))}
     </div>
@@ -77,20 +79,25 @@ export default function FileList({ files, loading, error, onRetry, onDelete }) {
 }
 
 /* ── Individual file card ── */
-function FileCard({ file, index, onDelete }) {
+function FileCard({ file, index, onDelete, onSelect, selected }) {
   const formattedSize = formatBytes(file.size);
   const formattedTime = formatDate(file.modified);
 
   return (
     <div
-      className="
+      onClick={onSelect}
+      className={`
         group relative rounded-xl p-5
         bg-bg-card/60 backdrop-blur-sm
-        border border-border hover:border-border-hover
+        border hover:border-border-hover
         hover:bg-bg-card-hover hover:shadow-lg hover:shadow-accent-teal/5
-        transition-all duration-300 ease-out
+        transition-all duration-300 ease-out cursor-pointer
         animate-fade-in
-      "
+        ${selected
+          ? "border-accent-teal/50 shadow-lg shadow-accent-teal/10 ring-1 ring-accent-teal/20"
+          : "border-border"
+        }
+      `}
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* Top row: filename + delete */}
