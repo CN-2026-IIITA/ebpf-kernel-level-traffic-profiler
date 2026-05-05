@@ -1,4 +1,4 @@
-/* use these empty masks to track all traffic between all ip addresses */
+/* use these empty masks to track all traffic between all ip addresses , can handle both the ip4 and ipv6*/
 static const struct ipv4_mask untracked_ipv4[] = {
     // add entries as needed
 };
