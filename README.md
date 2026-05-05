@@ -73,7 +73,6 @@ Raw Log: Live preview of the most recent network events captured by the kernel.
 Config: Preview of the configuration
 ![im6](06.jpeg)
 
-
 ---
 
 ## 🏃 Setup
