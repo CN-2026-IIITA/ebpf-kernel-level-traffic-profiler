@@ -10,6 +10,7 @@ const http = require('http');
 const API_BASE = 'http://localhost:3001';
 const CONCURRENT_REQUESTS = 10;
 const TOTAL_ROUNDS = 5;
+const VERBOSE = false; // toggle detailed logs
 
 async function fetchStats() {
     return new Promise((resolve) => {
@@ -26,9 +27,15 @@ async function fetchStats() {
                 });
             });
         }).on('error', (err) => {
-            resolve({ error: err.message });
+            resolve({ error: err.message, duration: 0 });
         });
     });
+}
+
+function percentile(arr, p) {
+    const sorted = [...arr].sort((a, b) => a - b);
+    const index = Math.ceil((p / 100) * sorted.length) - 1;
+    return sorted[index] || 0;
 }
 
 async function runBenchmark() {
@@ -47,20 +54,40 @@ async function runBenchmark() {
         const roundTime = Date.now() - startTime;
 
         const successes = results.filter(res => res.status === 200).length;
-        const avgLatency = results.reduce((acc, res) => acc + (res.duration || 0), 0) / results.length;
+        const errors = results.filter(res => res.error).length;
+
+        const latencies = results.map(r => r.duration || 0);
+        const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+        const minLatency = Math.min(...latencies);
+        const maxLatency = Math.max(...latencies);
+        const p95 = percentile(latencies, 95);
+
+        const rps = (CONCURRENT_REQUESTS / (roundTime / 1000)).toFixed(2);
 
         console.log(`      Success: ${successes}/${CONCURRENT_REQUESTS}`);
+        console.log(`      Errors: ${errors}`);
         console.log(`      Avg Latency: ${avgLatency.toFixed(2)}ms`);
+        console.log(`      Min/Max: ${minLatency}ms / ${maxLatency}ms`);
+        console.log(`      P95 Latency: ${p95}ms`);
+        console.log(`      RPS: ${rps}`);
         console.log(`      Round Time: ${roundTime}ms\n`);
-        
+
+        if (VERBOSE) {
+            console.log(results);
+        }
+
         allResults.push(...results);
+
         // Small cooldown
         await new Promise(r => setTimeout(r, 500));
     }
 
-    const finalAvg = allResults.reduce((acc, res) => acc + (res.duration || 0), 0) / allResults.length;
+    const allLatencies = allResults.map(r => r.duration || 0);
+    const finalAvg = allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length;
+
     console.log(`🏁 Benchmark Finished.`);
     console.log(`   Overall Average Latency: ${finalAvg.toFixed(2)}ms`);
+    console.log(`   Overall P95 Latency: ${percentile(allLatencies, 95)}ms`);
 }
 
 runBenchmark().catch(console.error);
