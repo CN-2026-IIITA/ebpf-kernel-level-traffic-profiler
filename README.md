@@ -49,6 +49,30 @@ sudo apt install clang libbpf-dev libelf-dev zlib1g-dev nodejs npm
 ```bash
 sudo dnf install clang libbpf-devel elfutils-libelf-devel zlib-devel nodejs npm
 ```
+---
+
+## Images
+
+📊 Dashboard Sections
+
+Overview: Real-time summary of discovered log files, total data processed, and active users.
+![im1](01.jpeg
+
+Per User: Detailed breakdown of network usage (ingress/egress) per Linux UID.
+![im2](02.jpeg)
+
+Top IPs: Aggregated view of the most active remote peers, filtering out local network traffic.
+![im3](03.jpeg)
+
+Geo Map: Interactive world map showing the geographical distribution of your traffic.
+![im4](04.jpeg)
+
+Raw Log: Live preview of the most recent network events captured by the kernel.
+![im5](05.jpeg)
+
+Config: Preview of the configuration
+![im6](06.jpeg)
+
 
 ---
 
