@@ -66,7 +66,7 @@ const upload = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB max
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB max size is allocated to data packet
 });
 
 app.use(cors());
