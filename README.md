@@ -16,6 +16,10 @@ A comprehensive kernel-level network monitoring solution that captures per-user 
 
 ## 🏗️ Architecture
 
+<img src="architecture.jpeg" width="400"/>
+
+<img src="FlowChart.jpeg"/>
+
 The project is divided into three main layers:
 
 1.  **Kernel Layer (eBPF)**: 
