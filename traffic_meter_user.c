@@ -1,5 +1,5 @@
 /*
- * Author: Yash Patil - iit2024179@iiita.ac.in
+ * Author: Yash Patil - iit2024179@iiita.ac.in, Shivam Mall - iit2024124@iiita.ac.in
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
