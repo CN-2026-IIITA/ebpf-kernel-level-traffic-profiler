@@ -114,7 +114,41 @@ PORT=3001
 This project is licensed under the **GPL-2.0-or-later**. eBPF programs using kernel helpers like `bpf_get_socket_uid` must be GPL-compliant.
 
 ## 🔗 References
-- [eBPF.io - What is eBPF?](https://ebpf.io/)
-- [Libbpf - BPF Loader Library](https://github.com/libbpf/libbpf)
-- [Node.js Express Documentation](https://expressjs.com/)
-- [React Documentation](https://react.dev/)
+
+  1. eBPF & Kernel Telemetry
+   * ebpf.io (https://ebpf.io/): The definitive starting point for eBPF, explaining the architecture, safety, and the
+     "Map" system.
+   * BPF Compiler Collection (BCC) Reference Guide (https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md):
+     Excellent for understanding how to interact with network packets (skb) and UID attribution.
+   * Libbpf-tools & Tutorials (https://libbpf.readthedocs.io/): Specifically for the ring_buffer API, which is the
+     high-performance communication channel used in traffic_meter_user.c.
+
+  2. Linux Networking & Cgroups
+   * Linux Cgroup v2 Manual (https://man7.org/linux/man-pages/man7/cgroups.7.html): Information on how the
+     /sys/fs/cgroup/ hierarchy works, which is where the eBPF program attaches to monitor specific users.
+   * Kernel Documentation: BPF Cgroup Hooks (https://www.kernel.org/doc/html/latest/bpf/prog_cgroup_skb.html): Details
+     on the BPF_PROG_TYPE_CGROUP_SKB hook used to capture ingress and egress traffic.
+
+  3. Backend & Data Aggregation
+   * Node.js Express Documentation (https://expressjs.com/): Used for building the REST API that parses the CSV logs and
+     serves them to the frontend.
+   * Multer Middleware (https://github.com/expressjs/multer): The library used in server.js to handle the
+     multipart/form-data log uploads.
+   * FreeIPAPI (https://freeipapi.com/): The external service used by the backend to resolve raw IP addresses into
+     geographic locations (City, Country).
+
+  4. Frontend & Visualization
+   * React (Vite) Documentation (https://react.dev/): For building the interactive dashboard and managing the state of
+     the parsed log rows.
+   * Leaflet.js / React-Leaflet (https://react-leaflet.js.org/): The underlying map engine used in the "Geo Map"
+     component to render IP locations.
+   * Tailwind CSS (or Modern Vanilla CSS) (https://tailwindcss.com/): For the responsive, dark-themed dashboard layout
+     and the "stat card" components.
+
+  5. Standards & Protocols
+   * RFC 791 (IPv4) (https://datatracker.ietf.org/doc/html/rfc791) & RFC 2460 (IPv6)
+     (https://datatracker.ietf.org/doc/html/rfc2460): Foundational knowledge of IP headers used to write the parsing
+     logic in traffic_meter.bpf.c.
+   * GPL-2.0 License (https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html): The required license for any eBPF
+     program utilizing "GPL-only" kernel helper functions like bpf_get_socket_uid.
+
