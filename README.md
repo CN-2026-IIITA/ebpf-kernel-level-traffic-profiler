@@ -1,4 +1,4 @@
-# eBPF Traffic Profiler & Dashboard
+# eBPF Based Kernel Level User Traffic Profiler
 
 A comprehensive kernel-level network monitoring solution that captures per-user traffic using eBPF and visualizes it through a modern web dashboard.
 
