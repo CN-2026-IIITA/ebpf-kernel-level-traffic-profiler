@@ -38,3 +38,9 @@ curl -6 http://[::1]:8080
 ```
 
 Then check the log files for IPv6 entries (they'll have addresses like `::1` or `2001:...`).
+
+# 6. Check if a domain has IPv6 support
+nslookup -query=AAAA google.com
+
+# or using dig
+dig AAAA google.com
