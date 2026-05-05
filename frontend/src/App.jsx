@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import FileList from "./components/FileList";
+import FileDetails from "./components/FileDetails";
 import UploadArea from "./components/UploadArea";
 
 const API_BASE = "http://localhost:3001";
@@ -10,6 +11,7 @@ export default function App() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const fetchFiles = useCallback(async () => {
     setLoading(true);
@@ -107,6 +109,8 @@ export default function App() {
             error={error}
             onRetry={fetchFiles}
             onDelete={handleDelete}
+            onSelect={setSelectedFile}
+            selectedFilename={selectedFile?.filename}
           />
         </main>
 
@@ -117,6 +121,12 @@ export default function App() {
           </p>
         </footer>
       </div>
+
+      {/* File details slide-out panel */}
+      <FileDetails
+        file={selectedFile}
+        onClose={() => setSelectedFile(null)}
+      />
     </div>
   );
 }
