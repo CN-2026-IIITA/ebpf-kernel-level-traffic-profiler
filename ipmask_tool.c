@@ -2,6 +2,12 @@
  * Author: Arya Narkhede - narkhede.arya@gmail.com
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
+/*
+ * This tool converts human-readable IP patterns (with wildcards)
+ * into optimized bitmask representations used by the eBPF program.
+ *
+ * It helps avoid runtime parsing inside kernel space by precomputing masks.
+ */
 
 /*
  * ipmask_tool.c - Helper utility to convert wildcard IP lists to C bitmask
