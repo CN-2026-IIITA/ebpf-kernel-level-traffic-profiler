@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # Configuration
-LOG_DIR = "../tmp"  # Should match backend's LOG_DIR
+LOG_DIR = "../tmp" 
 NICS = ["eth0", "wlan0", "enp0s3"]
 UIDS = [1000, 1001, 1002]
 SAMPLE_COUNT = 50
@@ -32,8 +32,6 @@ def simulate():
         nic = random.choice(NICS)
         filename = f"traffic_user_{nic}_{uid}.log"
         filepath = os.path.join(LOG_DIR, filename)
-        
-        # Decide direction
         direction = "out" if random.random() > 0.4 else "in"
         bytes_sent = random.randint(40, 1500)
         
