@@ -735,3 +735,123 @@ export var Map = Evented.extend({
 
 		return this;
 	},
+		// @method remove(): this
+	// Destroys the map and clears all related event listeners.
+	remove: function () {
+
+		this._initEvents(true);
+		if (this.options.maxBounds) { this.off('moveend', this._panInsideMaxBounds); }
+
+		if (this._containerId !== this._container._leaflet_id) {
+			throw new Error('Map container is being reused by another instance');
+		}
+
+		try {
+			// throws error in IE6-8
+			delete this._container._leaflet_id;
+			delete this._containerId;
+		} catch (e) {
+			/*eslint-disable */
+			this._container._leaflet_id = undefined;
+			/* eslint-enable */
+			this._containerId = undefined;
+		}
+
+		if (this._locationWatchId !== undefined) {
+			this.stopLocate();
+		}
+
+		this._stop();
+
+		DomUtil.remove(this._mapPane);
+
+		if (this._clearControlPos) {
+			this._clearControlPos();
+		}
+		if (this._resizeRequest) {
+			Util.cancelAnimFrame(this._resizeRequest);
+			this._resizeRequest = null;
+		}
+
+		this._clearHandlers();
+
+		if (this._loaded) {
+			// @section Map state change events
+			// @event unload: Event
+			// Fired when the map is destroyed with [remove](#map-remove) method.
+			this.fire('unload');
+		}
+
+		var i;
+		for (i in this._layers) {
+			this._layers[i].remove();
+		}
+		for (i in this._panes) {
+			DomUtil.remove(this._panes[i]);
+		}
+
+		this._layers = [];
+		this._panes = [];
+		delete this._mapPane;
+		delete this._renderer;
+
+		return this;
+	},
+
+	// @section Other Methods
+	// @method createPane(name: String, container?: HTMLElement): HTMLElement
+	// Creates a new [map pane](#map-pane) with the given name if it doesn't exist already,
+	// then returns it. The pane is created as a child of `container`, or
+	// as a child of the main map pane if not set.
+	createPane: function (name, container) {
+		var className = 'leaflet-pane' + (name ? ' leaflet-' + name.replace('Pane', '') + '-pane' : ''),
+		    pane = DomUtil.create('div', className, container || this._mapPane);
+
+		if (name) {
+			this._panes[name] = pane;
+		}
+		return pane;
+	},
+
+	// @section Methods for Getting Map State
+
+	// @method getCenter(): LatLng
+	// Returns the geographical center of the map view
+	getCenter: function () {
+		this._checkIfLoaded();
+
+		if (this._lastCenter && !this._moved()) {
+			return this._lastCenter.clone();
+		}
+		return this.layerPointToLatLng(this._getCenterLayerPoint());
+	},
+
+	// @method getZoom(): Number
+	// Returns the current zoom level of the map view
+	getZoom: function () {
+		return this._zoom;
+	},
+
+	// @method getBounds(): LatLngBounds
+	// Returns the geographical bounds visible in the current map view
+	getBounds: function () {
+		var bounds = this.getPixelBounds(),
+		    sw = this.unproject(bounds.getBottomLeft()),
+		    ne = this.unproject(bounds.getTopRight());
+
+		return new LatLngBounds(sw, ne);
+	},
+
+	// @method getMinZoom(): Number
+	// Returns the minimum zoom level of the map (if set in the `minZoom` option of the map or of any layers), or `0` by default.
+	getMinZoom: function () {
+		return this.options.minZoom === undefined ? this._layersMinZoom || 0 : this.options.minZoom;
+	},
+
+	// @method getMaxZoom(): Number
+	// Returns the maximum zoom level of the map (if set in the `maxZoom` option of the map or of any layers).
+	getMaxZoom: function () {
+		return this.options.maxZoom === undefined ?
+			(this._layersMaxZoom === undefined ? Infinity : this._layersMaxZoom) :
+			this.options.maxZoom;
+	},
