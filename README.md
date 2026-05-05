@@ -140,11 +140,10 @@ PORT=3001
 ## 📜 License
 This project is licensed under the **GPL-2.0-or-later**. eBPF programs using kernel helpers like `bpf_get_socket_uid` must be GPL-compliant.
 
-## 🔗 Attribution & References
+## 🔗 Attribution, References & Documentation
 
   1. eBPF & Kernel Telemetry
-   * ebpf.io (https://ebpf.io/): The definitive starting point for eBPF, explaining the architecture, safety, and the
-     "Map" system.
+   *  Kernel Profiling - The Linux Kernel Documentation (https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_profiling.html)
    * Libbpf-tools & Tutorials (https://libbpf.readthedocs.io/): Specifically for the ring_buffer API, which is the
      high-performance communication channel used in traffic_meter_user.c.
 
@@ -154,19 +153,7 @@ This project is licensed under the **GPL-2.0-or-later**. eBPF programs using ker
    * Kernel Documentation: BPF Cgroup Hooks (https://www.kernel.org/doc/html/latest/bpf/prog_cgroup_skb.html): Details
      on the BPF_PROG_TYPE_CGROUP_SKB hook used to capture ingress and egress traffic.
 
-  3. Backend & Data Aggregation
-   * Node.js Express Documentation (https://expressjs.com/): Used for building the REST API that parses the CSV logs and
-     serves them to the frontend.
-   * FreeIPAPI (https://ip-api.com/): The external service used by the backend to resolve raw IP addresses into
-     geographic locations (City, Country).
-
-  4. Frontend & Visualization
-   * Leaflet.js / React-Leaflet (https://react-leaflet.js.org/): The underlying map engine used in the "Geo Map"
-     component to render IP locations.
-   * Tailwind CSS (or Modern Vanilla CSS) (https://tailwindcss.com/): For the responsive, dark-themed dashboard layout
-     and the "stat card" components.
-
-  5. Standards & Protocols
+  3. Standards & Protocols
    * RFC 791 (IPv4) (https://datatracker.ietf.org/doc/html/rfc791) & RFC 2460 (IPv6)
      (https://datatracker.ietf.org/doc/html/rfc2460): Foundational knowledge of IP headers used to write the parsing
      logic in traffic_meter.bpf.c.
