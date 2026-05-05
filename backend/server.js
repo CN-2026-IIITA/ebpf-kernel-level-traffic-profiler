@@ -4,7 +4,6 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
-const { parse } = require("csv-parse/sync");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,6 +11,46 @@ const LOG_DIR = path.resolve(__dirname, process.env.LOG_DIR || "/tmp");
 
 // Regex to extract NIC and UID from log filenames
 const LOG_FILE_PATTERN = /^traffic_user_(.+)_(\d+)\.log$/;
+
+/**
+ * Helper: Parse CSV log and extract remote IPs
+ */
+async function analyzeLogFile(filePath) {
+  const content = await fs.promises.readFile(filePath, "utf-8");
+  const lines = content.trim().split("\n");
+  const ipMap = {};
+
+  lines.forEach((line) => {
+    const parts = line.split(",");
+    if (parts.length < 4) return;
+
+    const [direction, bytesStr, srcIp, dstIp] = parts;
+    const bytes = parseInt(bytesStr, 10) || 0;
+    
+    // Remote IP is dst if outgoing, src if incoming
+    const remoteIp = direction === "out" ? dstIp : srcIp;
+
+    // Basic filter for private IPs (rough check)
+    if (
+      remoteIp.startsWith("192.168.") ||
+      remoteIp.startsWith("10.") ||
+      remoteIp.startsWith("127.") ||
+      remoteIp.startsWith("172.1") || // Simplified 172.16-31
+      remoteIp.startsWith("fe80:") ||
+      remoteIp === "::1"
+    ) {
+      return;
+    }
+
+    if (!ipMap[remoteIp]) {
+      ipMap[remoteIp] = { ip: remoteIp, bytes: 0, count: 0 };
+    }
+    ipMap[remoteIp].bytes += bytes;
+    ipMap[remoteIp].count += 1;
+  });
+
+  return Object.values(ipMap).sort((a, b) => b.bytes - a.bytes);
+}
 
 // Multer storage — saves uploaded files directly to LOG_DIR with their original name
 const storage = multer.diskStorage({
@@ -71,46 +110,38 @@ app.get("/api/files", async (req, res) => {
 });
 
 /**
- * GET /api/files/:filename/rows
- * Returns parsed CSV rows for a specific log file.
+ * GET /api/files/:filename/analysis
+ * Returns analyzed IP data from a specific log file.
  */
-app.get("/api/files/:filename/rows", async (req, res) => {
+app.get("/api/files/:filename/analysis", async (req, res) => {
   const { filename } = req.params;
-  const limit = Math.max(1, Math.min(Number(req.query.limit) || 500, 5000));
-  const rowFields = ["direction", "bytes", "src_ip", "dst_ip", "timestamp", "total_in", "total_out"];
-
   if (!LOG_FILE_PATTERN.test(filename)) {
     return res.status(400).json({ error: "Invalid filename format" });
   }
 
   const filePath = path.join(LOG_DIR, filename);
-
   try {
-    const match = filename.match(LOG_FILE_PATTERN);
-    const content = await fs.promises.readFile(filePath, "utf8");
-    const rows = parse(content, {
-      columns: rowFields,
-      skip_empty_lines: true,
-      trim: true,
-      from_line: 1,
-    })
-      .slice(-limit)
-      .map((row) => ({
-        ...row,
-        nic: match[1],
-        uid: match[2],
-        bytes: Number(row.bytes || 0),
-        total_in: Number(row.total_in || 0),
-        total_out: Number(row.total_out || 0),
-      }));
-
-    res.json({ filename, rows });
+    const analysis = await analyzeLogFile(filePath);
+    res.json(analysis);
   } catch (err) {
-    if (err.code === "ENOENT") {
-      return res.status(404).json({ error: "File not found" });
-    }
-    console.error("Error reading log rows:", err.message);
-    res.status(500).json({ error: "Failed to read log rows", detail: err.message });
+    console.error("Analysis error:", err.message);
+    res.status(500).json({ error: "Failed to analyze log file" });
+  }
+});
+
+/**
+ * GET /api/geo/:ip
+ * Proxy to fetch geo-location data from freeipapi.com
+ */
+app.get("/api/geo/:ip", async (req, res) => {
+  try {
+    const { ip } = req.params;
+    const response = await fetch(`https://freeipapi.com/api/json/${ip}`);
+    if (!response.ok) throw new Error("Geo API failed");
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Geo lookup failed" });
   }
 });
 
