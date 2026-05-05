@@ -1,13 +1,24 @@
 /*
- * Author: Rahul
+ * Author: Rahul and Anurag
  */
-
 /*
  * traffic_meter.bpf.c - eBPF program to meter network traffic per UID.
  *
  * Attaches to cgroup_skb hooks (not XDP) to get socket UID access.
  * Emits per-packet events (uid, bytes, src/dst IP, direction) to user
  * space via separate IPv4/IPv6 ring buffers.
+ */
+/*
+ * This eBPF program tracks network traffic per user (UID)
+ * by attaching to cgroup skb hooks.
+ *
+ * It captures:
+ * - UID (which user generated traffic)
+ * - Packet size (bytes)
+ * - Source & Destination IP
+ * - Direction (ingress/egress)
+ *
+ * Data is sent to user-space using ring buffers.
  */
 
 #include <linux/bpf.h>
@@ -150,7 +161,7 @@ int traffic_meter_ingress(struct __sk_buff *skb)
     bpf_ringbuf_submit(e, 0);
     return 1;
 }
-
+// Check if (IP & mask) matches the network prefix
 SEC("cgroup_skb/egress")
 int traffic_meter_egress_v6(struct __sk_buff *skb)
 {
