@@ -118,8 +118,6 @@ This project is licensed under the **GPL-2.0-or-later**. eBPF programs using ker
   1. eBPF & Kernel Telemetry
    * ebpf.io (https://ebpf.io/): The definitive starting point for eBPF, explaining the architecture, safety, and the
      "Map" system.
-   * BPF Compiler Collection (BCC) Reference Guide (https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md):
-     Excellent for understanding how to interact with network packets (skb) and UID attribution.
    * Libbpf-tools & Tutorials (https://libbpf.readthedocs.io/): Specifically for the ring_buffer API, which is the
      high-performance communication channel used in traffic_meter_user.c.
 
@@ -132,14 +130,10 @@ This project is licensed under the **GPL-2.0-or-later**. eBPF programs using ker
   3. Backend & Data Aggregation
    * Node.js Express Documentation (https://expressjs.com/): Used for building the REST API that parses the CSV logs and
      serves them to the frontend.
-   * Multer Middleware (https://github.com/expressjs/multer): The library used in server.js to handle the
-     multipart/form-data log uploads.
-   * FreeIPAPI (https://freeipapi.com/): The external service used by the backend to resolve raw IP addresses into
+   * FreeIPAPI (https://ip-api.com/): The external service used by the backend to resolve raw IP addresses into
      geographic locations (City, Country).
 
   4. Frontend & Visualization
-   * React (Vite) Documentation (https://react.dev/): For building the interactive dashboard and managing the state of
-     the parsed log rows.
    * Leaflet.js / React-Leaflet (https://react-leaflet.js.org/): The underlying map engine used in the "Geo Map"
      component to render IP locations.
    * Tailwind CSS (or Modern Vanilla CSS) (https://tailwindcss.com/): For the responsive, dark-themed dashboard layout
