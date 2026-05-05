@@ -30,7 +30,7 @@ async function analyzeLogFile(filePath) {
     // Remote IP is dst if outgoing, src if incoming
     const remoteIp = direction === "out" ? dstIp : srcIp;
 
-    // Basic filter for private IPs (rough check)
+    // Basic filter for private IPs (rough check), it checks for  private filters
     if (
       remoteIp.startsWith("192.168.") ||
       remoteIp.startsWith("10.") ||
