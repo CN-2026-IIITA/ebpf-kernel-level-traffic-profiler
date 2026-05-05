@@ -1,11 +1,19 @@
+// Base ESLint rules
 import js from '@eslint/js'
+
+// Browser globals (window, document, etc.)
 import globals from 'globals'
+
+// React plugins
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
+  // Ignore build output
   globalIgnores(['dist']),
+
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -15,7 +23,10 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
-      parserOptions: { ecmaFeatures: { jsx: true } },
+      parserOptions: {
+        ecmaFeatures: { jsx: true }, // Enable JSX
+      },
     },
   },
 ])
+
